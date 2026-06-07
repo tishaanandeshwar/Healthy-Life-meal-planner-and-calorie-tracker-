@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Meal Planner and Calorie Tracker</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Kiwi+Maru:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { 
+            'kawaii': ['Quicksand', 'sans-serif'],
+            'maru': ['Kiwi Maru', 'serif']
+          },
+          colors: {
+            'sawako': '#fff5f5',   
+            'kazehaya': '#fef3e8',
+            'cherry': '#f06292',
+            'blossom': '#ffb7c5',
+            'mochi': '#fdfaf6',
+            'matcha': '#c5e0b4',
+            'senpai': '#f9c7c2',
+            'gakuon': '#e6e9f0'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Quicksand', sans-serif; }
+    h1, h2, h3, .serif-heading { font-family: 'Kiwi Maru', serif; font-weight: 500; letter-spacing: -0.3px; }
+    
+    .btn-square, button, .card-square, .modal-square, input, select, .progress-bar, .rounded-* {
+      border-radius: 0px !important;
+    }
+    .shadow-square { box-shadow: 4px 4px 0 rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.05); }
+    .border-square { border-style: solid; border-width: 1.5px; border-color: #ffe0e7; }
+    .kawaii-card { background: #ffffff; border: 2px solid #ffcdd9; box-shadow: 6px 6px 0 #fce4ec; transition: all 0.15s ease; }
+    .kawaii-card:hover { transform: translateY(-2px); box-shadow: 8px 8px 0 #f8bbd0; }
+    .btn-kawaii { background: #ffb7c5; border: 2px solid #f48fb1; color: #5d4037; font-weight: 700; transition: 0.1s linear; box-shadow: 2px 2px 0 #f48fb1; }
+    .btn-kawaii:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #f48fb1; background: #ff9eb0; }
+    .btn-outline-square { background: transparent; border: 2px solid #f9a8b9; color: #b75a6b; }
+    .progress-bar-square { background: #ffe0e7; border-radius: 0px; overflow: hidden; border: 1px solid #f9c2cf; }
+    .progress-fill { transition: width 0.3s ease; background: #f06292; height: 100%; width: 0%; }
+    .suggestion-tag { background: #fef6e6; border: 1.5px solid #ffcfb6; padding: 8px 12px; transition: all 0.1s; box-shadow: 1px 1px 0 #ffe0b5; }
+    .suggestion-tag:hover { transform: scale(0.98); background: #ffede1; border-color: #f9a26c; }
+    .glass { background: #fffafc; backdrop-filter: blur(10px); border-bottom: 2px solid #ffd9e3; }
+    .bg-kawaii-soft { background: #fff9fb; }
+    hr { border-color: #ffe0e7; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #ffb7c5; border-radius: 0px; }
+    .fade-in { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    input, select, textarea { border: 1.5px solid #ffccd5; background: #fffcfc; padding: 10px 12px; font-size: 0.9rem; outline: none; transition: 0.1s; }
+    input:focus, select:focus { border-color: #f48fb1; background: #fffbfb; box-shadow: inset 0 0 0 2px #ffe2ec; }
+    .badge-square { background: #fce4ec; color: #b34e6b; padding: 2px 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #f9c2cf; }
+    .nav-link { font-weight: 600; padding: 8px 12px; transition: all 0.08s linear; border-bottom: 2px solid transparent; }
+    .nav-link:hover { background: #ffeff2; border-bottom-color: #f48fb1; }
+    .kawaii-icon { filter: drop-shadow(1px 1px 0 #ffe0e7); }
+    .heart-emoji { display: inline-block; font-size: 1.1rem; }
+  </style>
+</head>
+<body class="h-full bg-[#fff9f7] text-gray-700 overflow-auto font-kawaii">
+<div id="app" class="h-full w-full">
+
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 glass border-b border-[#ffd0dc] shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
+        <div class="w-9 h-9 bg-[#f48fb1] border-2 border-[#ffb7c5] flex items-center justify-center shadow-square"><i data-lucide="sparkles" class="w-5 h-5 text-white"></i></div>
+        <span class="text-xl font-bold tracking-tight text-[#ad5a6e] maru-font"> Healthy Life </span>
+      </div>
+      <div class="hidden md:flex items-center gap-1">
+        <button onclick="navigate('home')" class="nav-link text-sm"> Home</button>
+        <button onclick="navigate('dashboard')" class="nav-link text-sm">  Dashboard</button>
+        <button onclick="navigate('planner')" class="nav-link text-sm">  Meal Planner</button>
+        <button onclick="navigate('tracker')" class="nav-link text-sm">  Calorie Tracker</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="navigate('login')" class="px-5 py-2 text-sm font-bold btn-kawaii shadow-square"> Login</button>
+        <button class="md:hidden p-2 border border-[#ffc0d0]" onclick="toggleMobileMenu()"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-white/98 border-t-2 border-[#ffd4e1] py-3 px-4 space-y-2">
+      <button onclick="navigate('home');toggleMobileMenu()" class="block w-full text-left px-4 py-2.5 border border-[#ffdce6] bg-[#fff7f9]"> Home</button>
+      <button onclick="navigate('dashboard');toggleMobileMenu()" class="block w-full text-left px-4 py-2.5 border border-[#ffdce6]">  Dashboard</button>
+      <button onclick="navigate('planner');toggleMobileMenu()" class="block w-full text-left px-4 py-2.5 border border-[#ffdce6]">  Meal Planner</button>
+      <button onclick="navigate('tracker');toggleMobileMenu()" class="block w-full text-left px-4 py-2.5 border border-[#ffdce6]">  Calorie Tracker</button>
+      <button onclick="navigate('login');toggleMobileMenu()" class="block w-full text-left px-4 py-2.5 bg-[#ffb7c5] font-bold text-white">  Login  </button>
+    </div>
+  </nav>
+
+  <div id="pages" class="pt-16 h-full overflow-y-auto">
+    
+    <div id="page-home" class="page fade-in">
+      <section class="relative overflow-hidden bg-[#fff6f3] border-b-2 border-[#ffe2ec] py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+          <div class="grid md:grid-cols-2 gap-10 items-center">
+            <div><span class="inline-block px-4 py-1.5 bg-[#fce4ec] border border-[#ffccda] text-[#ac5a70] text-sm mb-5">Today is a good day!</span>
+              <h1 class="text-4xl md:text-6xl font-extrabold leading-tight">Track, Plan,<br><span class="text-[#f06292]">&nbsp;Thrive Daily</span></h1>
+              <p class="text-lg text-gray-600 mb-8">"Let food be thy medicine and medicine be thy food." — Hippocrates.</p>
+              <button onclick="navigate('dashboard')" class="px-7 py-3.5 btn-kawaii text-white font-bold text-lg shadow-square">Start my journey →</button>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="border-2 border-[#ffcbd9] shadow-square h-40 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=300&fit=crop');"></div>
+              <div class="border-2 border-[#ffcbd9] shadow-square h-40 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop');"></div>
+              <div class="border-2 border-[#ffcbd9] shadow-square h-40 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400&h=300&fit=crop');"></div>
+              <div class="border-2 border-[#ffcbd9] shadow-square h-40 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1546069901-eacef0df6022?w=400&h=300&fit=crop');"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="py-16 px-4 max-w-6xl mx-auto"><h2 class="text-3xl font-bold text-center mb-12">  Everything you need  </h2>
+        <div class="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div class="kawaii-card p-6 cursor-pointer border-2 border-[#ffd6e2]" onclick="navigate('planner')"><div class="w-12 h-12 bg-[#ffe4ec] border border-[#ffb7c5] flex items-center justify-center mb-4"><i data-lucide="calendar" class="w-6 h-6 text-[#e6739f]"></i></div><h3 class="text-lg font-bold">📅 Meal Planner</h3><p class="text-gray-500 text-sm">Cute suggestions & smart meal pairing.</p></div>
+          <div class="kawaii-card p-6 cursor-pointer border-2 border-[#ffd6e2]" onclick="navigate('tracker')"><div class="w-12 h-12 bg-[#ffe4ec] border border-[#ffb7c5] flex items-center justify-center mb-4"><i data-lucide="flame" class="w-6 h-6 text-[#e6739f]"></i></div><h3 class="text-lg font-bold">🔥 Calorie Tracker</h3><p class="text-gray-500 text-sm">Auto-fill macros, log Indian foods adorably.</p></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="page-dashboard" class="page hidden fade-in p-5 md:p-8 max-w-7xl mx-auto">
+      <div class="flex flex-wrap justify-between items-center mb-6"><div><h1 class="text-3xl font-bold">💮 Dashboard</h1><p class="text-gray-500" id="dash-date"></p></div><button onclick="navigate('goals')" class="px-5 py-2 btn-kawaii text-white font-bold text-sm flex gap-2"><i data-lucide="target" class="w-4 h-4"></i> Set Goals</button></div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white border-2 border-[#ffd4df] p-5 shadow-square"><div class="flex justify-between"><span class="text-xs font-bold"> Daily Goal</span><i data-lucide="flame" class="w-5 h-5 text-[#f48fb1]"></i></div><p class="text-3xl font-bold mt-2" id="dash-goal">2000</p><p class="text-xs text-gray-400">kcal/day</p></div>
+        <div class="bg-white border-2 border-[#ffd4df] p-5 shadow-square"><div class="flex justify-between"><span class="text-xs font-bold"> Consumed</span><i data-lucide="utensils" class="w-5 h-5 text-[#f48fb1]"></i></div><p class="text-3xl font-bold mt-2" id="dash-consumed">0</p><p class="text-xs text-gray-400">kcal</p></div>
+        <div class="bg-white border-2 border-[#ffd4df] p-5 shadow-square"><div class="flex justify-between"><span class="text-xs font-bold"> Water</span><i data-lucide="droplets" class="w-5 h-5 text-[#79c2d6]"></i></div><p class="text-3xl font-bold mt-2" id="dash-water">0</p><p class="text-xs text-gray-400">ml today</p></div>
+        <div class="bg-white border-2 border-[#ffd4df] p-5 shadow-square"><div class="flex justify-between"><span class="text-xs font-bold"> Remaining</span><i data-lucide="leaf" class="w-5 h-5 text-[#a8d695]"></i></div><p class="text-3xl font-bold mt-2" id="dash-remaining">2000</p><p class="text-xs text-gray-400">kcal left</p></div>
+      </div>
+      <div class="grid lg:grid-cols-3 gap-6 mb-8">
+        <div class="lg:col-span-2 bg-white border-2 border-[#ffdee8] p-5 shadow-square"><h3 class="font-bold mb-3 flex gap-2"><i data-lucide="calendar-range" class="w-5 h-5 text-[#f06292]"></i>📈 Last 7 Days Calories</h3><canvas id="weeklyCalChart" height="180" style="max-height:220px; width:100%"></canvas></div>
+        <div class="bg-white border-2 border-[#ffdee8] p-5 shadow-square"><h3 class="font-bold mb-3"> Today's Macros</h3><div class="space-y-4"><div><div class="flex justify-between text-sm"><span>🍗 Protein</span><span id="macro-protein">0g</span></div><div class="progress-bar-square mt-1"><div id="protein-bar" class="progress-fill" style="width:0%"></div></div></div>
+          <div><div class="flex justify-between text-sm"><span>🍚 Carbs</span><span id="macro-carbs">0g</span></div><div class="progress-bar-square"><div id="carbs-bar" class="progress-fill" style="width:0%; background:#f9a825;"></div></div></div>
+          <div><div class="flex justify-between text-sm"><span>🧈 Fats</span><span id="macro-fats">0g</span></div><div class="progress-bar-square"><div id="fats-bar" class="progress-fill" style="width:0%; background:#ba68c8;"></div></div></div>
+          <div><div class="flex justify-between text-sm"><span>🌾 Fiber</span><span id="macro-fiber">0g</span></div><div class="progress-bar-square"><div id="fiber-bar" class="progress-fill" style="width:0%; background:#81c784;"></div></div></div></div>
+          <div class="mt-5 pt-3 border-t-2 border-[#ffe2ec]"><h4 class="font-medium text-sm mb-2">💧 Water Log </h4><div class="flex gap-2 flex-wrap"><button onclick="addWater(250)" class="px-3 py-1 bg-[#fdeff2] border border-[#f3bacb] text-xs font-bold">💧 +250ml</button><button onclick="addWater(500)" class="px-3 py-1 bg-[#fdeff2] border border-[#f3bacb] text-xs font-bold">+500ml</button></div><div class="progress-bar-square mt-3"><div id="water-progress" class="progress-fill" style="width:0%; background:#4fc3f7;"></div></div><p class="text-xs mt-1"><span id="water-pct">0</span>% of 2500ml</p></div>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white border-2 border-[#ffe2ec] p-6 shadow-square"><h3 class="font-bold mb-3">🍜 Today's Meals</h3><div id="recent-meals" class="space-y-2"><p class="text-sm text-gray-400 italic">No meals logged yet ~ add some!</p></div></div>
+        <div class="bg-white border-2 border-[#ffe2ec] p-6 shadow-square"><h3 class="font-bold mb-2">📏 BMI Check</h3><div class="flex gap-2 flex-wrap"><input id="bmi-weight" type="number" placeholder="Weight (kg)" class="w-28"><input id="bmi-height" type="number" placeholder="Height (cm)" class="w-28"><button onclick="calcBMI()" class="px-4 py-2 btn-kawaii text-white text-sm">Calculate</button></div><p id="bmi-result" class="text-xs text-gray-500 mt-2"></p></div>
+      </div>
+    </div>
+
+    <div id="page-planner" class="page hidden fade-in p-5 md:p-8 max-w-7xl mx-auto"><h1 class="text-3xl font-bold">🍱 Meal Planner <span class="text-[#e6739f]">♡</span></h1><p class="text-gray-500 mb-6">"Take the guesswork out of ghar ka khana with intelligent, goal-mapped meal tracking.!!"</p>
+      <div class="grid md:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white border-2 border-[#ffdce8] p-5 shadow-square"><div class="flex gap-2 mb-3"><i data-lucide="sunrise"></i><h3 class="font-bold"> Breakfast</h3></div><div id="plan-breakfast" class="min-h-[80px] space-y-2"></div><button onclick="openPlanModal('breakfast')" class="w-full mt-2 py-2 border-2 border-dashed border-[#ffbfcf] text-sm">+ Add</button></div>
+        <div class="bg-white border-2 border-[#ffdce8] p-5 shadow-square"><div class="flex gap-2 mb-3"><i data-lucide="sun"></i><h3 class="font-bold"> Lunch</h3></div><div id="plan-lunch" class="min-h-[80px] space-y-2"></div><button onclick="openPlanModal('lunch')" class="w-full mt-2 py-2 border-2 border-dashed border-[#ffbfcf] text-sm">+ Add</button></div>
+        <div class="bg-white border-2 border-[#ffdce8] p-5 shadow-square"><div class="flex gap-2 mb-3"><i data-lucide="cookie"></i><h3 class="font-bold"> Snack</h3></div><div id="plan-snack" class="min-h-[80px] space-y-2"></div><button onclick="openPlanModal('snack')" class="w-full mt-2 py-2 border-2 border-dashed border-[#ffbfcf] text-sm">+ Add</button></div>
+        <div class="bg-white border-2 border-[#ffdce8] p-5 shadow-square"><div class="flex gap-2 mb-3"><i data-lucide="moon"></i><h3 class="font-bold"> Dinner</h3></div><div id="plan-dinner" class="min-h-[80px] space-y-2"></div><button onclick="openPlanModal('dinner')" class="w-full mt-2 py-2 border-2 border-dashed border-[#ffbfcf] text-sm">+ Add</button></div>
+      </div>
+      <div class="bg-[#fef3ed] border-2 border-[#ffd6c0] p-6 shadow-square mb-6">
+        <h3 class="font-bold text-lg flex items-center gap-2"><i data-lucide="sparkles" class="w-5 h-5 text-[#f48fb1]"></i>  Smart Suggestions</h3>
+        <p id="suggestion-reason" class="text-sm text-gray-600 mb-3">Analyzing today's intake...</p>
+        <div id="dynamic-suggestions" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+        <button onclick="refreshSuggestions()" class="mt-4 text-sm text-[#ac5a70] border border-[#ffccda] bg-white px-4 py-1 flex gap-1 mx-auto"> Refresh suggestions</button>
+      </div>
+      <div class="bg-[#fef5f7] border-2 border-[#ffdae5] p-6 shadow-square"><h3 class="font-bold text-lg mb-3">  Popular Healthy Choices!!</h3>
+        <div class="grid sm:grid-cols-4 gap-2">
+          <button onclick="quickAdd('Ragi Dosa',210,7,38,4,5,'breakfast')" class="bg-white border border-[#ffccd6] p-2 text-xs font-bold">  Ragi Dosa (210)</button>
+          <button onclick="quickAdd('Moong Dal Chilla',180,9,28,3,6,'breakfast')" class="bg-white border border-[#ffccd6] p-2 text-xs">  Moong Chilla</button>
+          <button onclick="quickAdd('Quinoa Pulao',350,12,52,9,7,'lunch')" class="bg-white border border-[#ffccd6] p-2 text-xs">  Quinoa Pulao</button>
+          <button onclick="quickAdd('Grilled Paneer Tikka',290,24,12,16,3,'dinner')" class="bg-white border border-[#ffccd6] p-2 text-xs">  Paneer Tikka</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-tracker" class="page hidden fade-in p-5 md:p-8 max-w-7xl mx-auto"><h1 class="text-3xl font-bold">  Calorie Tracker <span class="text-[#f48fb1]"></span></h1><p class="text-gray-500 mb-6">Log everything with just a tap~ ~</p>
+      <div class="grid lg:grid-cols-3 gap-6"><div class="lg:col-span-2"><div class="bg-white border-2 border-[#ffe0e8] p-6 shadow-square mb-6"><div class="relative"><i data-lucide="search" class="absolute left-3 top-3 text-gray-400"></i><input id="food-search" placeholder="idli, dosa, paneer, biryani..." class="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#fad1df]"></div><div id="food-results" class="mt-3 space-y-2 max-h-64 overflow-auto"></div></div>
+        <div class="bg-white border-2 border-[#ffe0e8] p-6 shadow-square"><div id="selected-food-card" class="bg-[#fff3f6] border-2 border-[#ffccd9] p-4 mb-4 hidden"><div><p class="font-bold" id="selected-food-name">-</p><div class="flex gap-3 text-sm"><span> <span id="selected-cal">0</span> kcal</span><span> <span id="selected-protein">0</span>g</span></div></div></div>
+        <form onsubmit="logSelectedFood(event)" class="space-y-3"><div class="grid grid-cols-2 gap-3"><select id="smart-meal-type" class="bg-white border-2 border-[#f7c5d4] p-2"><option value="breakfast">Breakfast </option><option value="lunch">Lunch </option><option value="snack">Snack </option><option value="dinner">Dinner </option></select><input type="number" id="smart-quantity" value="1" step="0.5" class="border-2 border-[#f7c5d4] p-2"></div><input type="hidden" id="smart-food-name"><input type="hidden" id="smart-base-cal"><input type="hidden" id="smart-base-protein"><input type="hidden" id="smart-base-carbs"><input type="hidden" id="smart-base-fats"><input type="hidden" id="smart-base-fiber"><button type="submit" class="w-full py-3 btn-kawaii text-white font-bold"> + Log Meal </button></form></div></div>
+        <div class="bg-white border-2 border-[#ffe0e8] p-6 shadow-square"><h3 class="font-bold mb-4"> Today's Summary</h3><p class="text-4xl font-bold text-[#e6739f] text-center" id="tracker-total">0</p><div class="space-y-2 mt-4"><div class="flex justify-between"><span> Breakfast</span><span id="tb-breakfast">0</span></div><div class="flex justify-between"><span> Lunch</span><span id="tb-lunch">0</span></div><div class="flex justify-between"><span> Snack</span><span id="tb-snack">0</span></div><div class="flex justify-between"><span> Dinner</span><span id="tb-dinner">0</span></div></div></div>
+      </div></div>
+
+    <div id="page-goals" class="page hidden fade-in p-8 max-w-4xl mx-auto"><h1 class="text-3xl font-bold">🎯 Set Your Goal </h1><div class="grid sm:grid-cols-2 gap-5 mt-6"><button onclick="setGoal('loss')" class="p-5 bg-white border-2 border-[#ffcbd9] shadow-square"><i data-lucide="trending-down" class="w-8 h-8 text-[#f48fb1]"></i><h3 class="font-bold">💖 Weight Loss</h3><p>~1800 kcal</p></button><button onclick="setGoal('gain')" class="p-5 bg-white border-2 border-[#ffcbd9] shadow-square"><i data-lucide="trending-up" class="w-8 h-8 text-[#ffb74d]"></i><h3>🍚 Weight Gain</h3><p>~2500 kcal</p></button></div><div id="goal-confirmation" class="hidden mt-4 p-4 bg-[#fce4ec] border-2 border-[#ffb7c5] text-center"></div></div>
+    <div id="page-login" class="page hidden fade-in flex justify-center items-center min-h-[80vh]"><div class="bg-white p-8 border-2 border-[#fdd0de] shadow-square w-full max-w-md"><h2 class="text-2xl font-bold text-center">🌸 Welcome back 🌸</h2><form onsubmit="handleLogin(event)" class="mt-6"><input id="login-email" placeholder="Email" class="w-full mb-3"><input id="login-pass" type="password" placeholder="Password" class="w-full mb-4"><button class="w-full py-3 btn-kawaii text-white font-bold">Sign In 🎀</button></form><button onclick="navigate('register')" class="text-[#c96b85] text-sm mt-3 w-full text-center">Create account ♡</button></div></div>
+    <div id="page-register" class="page hidden fade-in flex justify-center items-center min-h-[80vh]"><div class="bg-white p-8 border-2 border-[#fdd0de] shadow-square w-full max-w-md"><h2 class="text-2xl font-bold text-center"> Join the club</h2><form onsubmit="handleRegister(event)" class="mt-5"><input id="reg-name" placeholder="Name" class="w-full mb-3"><input id="reg-email" placeholder="Email" class="w-full mb-3"><input id="reg-pass" placeholder="Password" class="w-full mb-4"><button class="w-full py-3 btn-kawaii text-white font-bold">Register 🧸</button></form></div></div>
+  </div>
+
+  <div id="plan-modal" class="hidden fixed inset-0 z-50 bg-black/30 flex items-center justify-center"><div class="bg-white border-4 border-[#f9bbc9] p-6 w-full max-w-sm shadow-square"><h3 class="font-bold mb-3">➕ Add to <span id="plan-modal-type"></span></h3><form onsubmit="savePlanMeal(event)"><input id="pm-name" placeholder="Food name" class="w-full mb-2"><input id="pm-cal" type="number" placeholder="Calories" class="w-full mb-3"><div class="flex gap-3"><button type="submit" class="flex-1 py-2 btn-kawaii text-white">Add</button><button type="button" onclick="closePlanModal()" class="flex-1 py-2 bg-gray-100 border border-gray-300">Cancel</button></div></form></div></div>
+  <div id="toast" class="fixed bottom-6 right-6 z-50 hidden bg-[#4a2c34] text-white px-5 py-3 shadow-square text-sm"><span id="toast-msg"></span></div>
+</div>
+
+<script>
+  let allData = []; let calorieGoal = 2000; let currentPlanType = '';
+  let weeklyChart = null;
+  const expandedSuggestionLibrary = {
+    breakfast: [ { name:'Ragi Dosa', cal:210, protein:7, carbs:38, fats:4, fiber:5 },{ name:'Moong Dal Chilla', cal:180, protein:9, carbs:28, fats:3, fiber:6 },{ name:'Besan Chilla', cal:195, protein:8, carbs:24, fats:7, fiber:4 },{ name:'Poha with peanuts', cal:260, protein:6, carbs:42, fats:9, fiber:5 },{ name:'Oats Idli', cal:170, protein:5, carbs:32, fats:2, fiber:6 } ],
+    lunch: [ { name:'Brown Rice + Sambar', cal:390, protein:14, carbs:68, fats:7, fiber:10 },{ name:'Quinoa Pulao', cal:350, protein:12, carbs:52, fats:9, fiber:7 },{ name:'Baingan Bharta with Roti', cal:430, protein:11, carbs:55, fats:18, fiber:12 },{ name:'Palak Tofu Curry', cal:340, protein:18, carbs:28, fats:16, fiber:6 } ],
+    snack: [ { name:'Roasted Chana', cal:160, protein:10, carbs:25, fats:3, fiber:8 },{ name:'Greek Yogurt Bowl', cal:120, protein:12, carbs:8, fats:4, fiber:1 },{ name:'Fruit Chaat', cal:90, protein:2, carbs:22, fats:0.5, fiber:3 },{ name:'Masala Peanuts', cal:210, protein:8, carbs:14, fats:14, fiber:4 } ],
+    dinner: [ { name:'Light Vegetable Khichdi', cal:290, protein:9, carbs:48, fats:6, fiber:6 },{ name:'Grilled Paneer Tikka', cal:290, protein:24, carbs:12, fats:16, fiber:3 },{ name:'Mushroom Matar', cal:320, protein:14, carbs:36, fats:12, fiber:9 },{ name:'Egg Curry (2 eggs)', cal:340, protein:22, carbs:16, fats:20, fiber:4 } ]
+  };
+  function loadFromStorage() { const stored = localStorage.getItem('nutrilife_data'); if(stored) allData = JSON.parse(stored); const storedGoal = localStorage.getItem('nutrilife_goal'); if(storedGoal) calorieGoal = parseInt(storedGoal); updateDashboard(); updateDynamicSuggestions(); }
+  function saveToStorage() { localStorage.setItem('nutrilife_data', JSON.stringify(allData)); localStorage.setItem('nutrilife_goal', calorieGoal); }
+  async function addEntry(entry) { entry.id = Date.now(); allData.push(entry); saveToStorage(); updateDashboard(); updateDynamicSuggestions(); }
+  function showToast(msg) { const t=document.getElementById('toast'); document.getElementById('toast-msg').innerText=msg; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),2500); }
+  function navigate(page) { document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden')); const el=document.getElementById(`page-${page}`); if(el) el.classList.remove('hidden'); if(page==='dashboard') updateDashboard(); if(page==='planner') updateDynamicSuggestions(); lucide.createIcons(); }
+  function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+  function handleLogin(e){ e.preventDefault(); showToast('🎀 Logged in!'); navigate('dashboard'); }
+  function handleRegister(e){ e.preventDefault(); showToast('🌸 Account created!'); navigate('goals'); }
+  async function addWater(ml){ await addEntry({type:'water',date:new Date().toISOString().split('T')[0],water_ml:ml}); showToast(`💧 +${ml}ml water`); }
+  function calcBMI(){ let w=parseFloat(document.getElementById('bmi-weight').value), h=parseFloat(document.getElementById('bmi-height').value); if(w&&h){ let bmi=(w/((h/100)**2)).toFixed(1); let cat=bmi<18.5?'Underweight':bmi<25?'Normal':bmi<30?'Overweight':'Obese'; document.getElementById('bmi-result').innerText=`BMI: ${bmi} (${cat})`; } }
+  const foodDB = [
+    {name:'Idli (2 pcs)',cal:190,protein:6,carbs:36,fats:1.6,fiber:1},{name:'Dosa with chutney',cal:320,protein:8,carbs:48,fats:10,fiber:2},{name:'Paneer Butter Masala',cal:480,protein:22,carbs:18,fats:32,fiber:2},{name:'Chana Masala',cal:310,protein:11,carbs:45,fats:8,fiber:12},{name:'Rajma Chawal',cal:350,protein:12,carbs:62,fats:4,fiber:8},{name:'Biryani (Chicken)',cal:520,protein:28,carbs:65,fats:18,fiber:2},{name:'Tandoori Chicken',cal:380,protein:42,carbs:6,fats:18,fiber:0},{name:'Palak Paneer',cal:380,protein:18,carbs:16,fats:28,fiber:4},{name:'Aloo Paratha',cal:320,protein:8,carbs:42,fats:14,fiber:3},{name:'Poha',cal:280,protein:6,carbs:45,fats:8,fiber:5},{name:'Egg Bhurji',cal:220,protein:14,carbs:6,fats:14,fiber:1},{name:'Mushroom Masala',cal:260,protein:9,carbs:18,fats:15,fiber:5}];
+  function searchFood(){ const q=document.getElementById('food-search').value.toLowerCase(); if(!q){ document.getElementById('food-results').innerHTML=''; return; } const matches=foodDB.filter(f=>f.name.toLowerCase().includes(q)); document.getElementById('food-results').innerHTML=matches.map(f=>`<button onclick='selectFood(${JSON.stringify(f).replace(/'/g, "&#39;")})' class="w-full flex justify-between p-3 bg-white border border-[#ffdee8] hover:bg-[#fff3f5] text-left"><div><p class="font-medium">${f.name}</p><p class="text-xs">🔥${f.cal}kcal · P:${f.protein}g</p></div><i data-lucide="chevron-right"></i></button>`).join(''); lucide.createIcons(); }
+  function selectFood(food) { document.getElementById('selected-food-card').classList.remove('hidden'); document.getElementById('selected-food-name').innerText=food.name; document.getElementById('selected-cal').innerText=food.cal; document.getElementById('selected-protein').innerText=food.protein; document.getElementById('smart-food-name').value=food.name; document.getElementById('smart-base-cal').value=food.cal; document.getElementById('smart-base-protein').value=food.protein||0; document.getElementById('smart-base-carbs').value=food.carbs||0; document.getElementById('smart-base-fats').value=food.fats||0; document.getElementById('smart-base-fiber').value=food.fiber||0; document.getElementById('food-search').value=''; document.getElementById('food-results').innerHTML=''; }
+  async function logSelectedFood(e){ e.preventDefault(); const qty=parseFloat(document.getElementById('smart-quantity').value)||1; const name=document.getElementById('smart-food-name').value; const cal=parseFloat(document.getElementById('smart-base-cal').value); if(!name||isNaN(cal)){ showToast('Please select a food first ♡'); return; } await addEntry({type:'meal',date:new Date().toISOString().split('T')[0],food_name:`${name}${qty>1?' ('+qty+'x)':''}`,calories:Math.round(cal*qty),protein:Math.round((parseFloat(document.getElementById('smart-base-protein').value||0)*qty)*10)/10,carbs:Math.round((parseFloat(document.getElementById('smart-base-carbs').value||0)*qty)*10)/10,fats:Math.round((parseFloat(document.getElementById('smart-base-fats').value||0)*qty)*10)/10,fiber:Math.round((parseFloat(document.getElementById('smart-base-fiber').value||0)*qty)*10)/10,meal_type:document.getElementById('smart-meal-type').value}); showToast(`✅ ${name} logged!`); document.getElementById('selected-food-card').classList.add('hidden'); }
+  async function quickAdd(name,cal,protein,carbs,fats,fiber,mealType){ await addEntry({type:'meal',date:new Date().toISOString().split('T')[0],food_name:name,calories:cal,protein,carbs,fats,fiber,meal_type:mealType}); showToast(`➕ ${name} added~`); }
+  function openPlanModal(type){ currentPlanType=type; document.getElementById('plan-modal').classList.remove('hidden'); document.getElementById('plan-modal-type').innerText=type; }
+  function closePlanModal(){ document.getElementById('plan-modal').classList.add('hidden'); }
+  async function savePlanMeal(e){ e.preventDefault(); await addEntry({type:'meal',date:new Date().toISOString().split('T')[0],food_name:document.getElementById('pm-name').value,calories:parseInt(document.getElementById('pm-cal').value)||0,protein:0,carbs:0,fats:0,fiber:0,meal_type:currentPlanType}); closePlanModal(); showToast('🎀 Meal added to plan'); }
+  function updateWeeklyChart() { const dates = [...Array(7)].map((_,i)=>{ let d=new Date(); d.setDate(d.getDate()-i); return d.toISOString().split('T')[0]; }).reverse(); const dailyCals = dates.map(date=> allData.filter(d=>d.type==='meal' && d.date===date).reduce((sum,m)=>sum+(m.calories||0),0)); const ctx = document.getElementById('weeklyCalChart')?.getContext('2d'); if(ctx) { if(weeklyChart) weeklyChart.destroy(); weeklyChart = new Chart(ctx, { type:'line', data:{ labels:dates.map(d=>d.slice(5)), datasets:[{ label:'🍙 Calories consumed', data:dailyCals, borderColor:'#f48fb1', backgroundColor:'rgba(244,143,177,0.1)', fill:true, tension:0.3, pointBackgroundColor:'#f06292' }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{ position:'top' } } } }); } }
+  function refreshSuggestions() { updateDynamicSuggestions(); }
+  function updateDynamicSuggestions(){
+    const today = new Date().toISOString().split('T')[0];
+    const mealsToday = allData.filter(d=>d.type==='meal' && d.date===today);
+    const consumed = mealsToday.reduce((s,m)=>s+(m.calories||0),0);
+    const remaining = Math.max(0, calorieGoal - consumed);
+    const reasonText = remaining <= 0 ? " Goal reached! light veggie snack now ~" : remaining < 300 ? " Almost there! choose a low-cal snack" : remaining < 700 ? " Room for a fulfilling meal!" : " hearty day ahead!";
+    document.getElementById('suggestion-reason').innerHTML = `✨ ${reasonText} · ${remaining} kcal left.`;
+    let suggestionsHtml = '';
+    for (let slot of ['breakfast','lunch','snack','dinner']) {
+      const lib = expandedSuggestionLibrary[slot];
+      if(!lib) continue;
+      const randomPick = lib[Math.floor(Math.random() * lib.length)];
+      suggestionsHtml += `<button onclick="quickAdd('${randomPick.name}',${randomPick.cal},${randomPick.protein},${randomPick.carbs},${randomPick.fats},${randomPick.fiber},'${slot}')" class="suggestion-tag text-left shadow-sm"><div class="font-semibold text-sm">${randomPick.name}</div><div class="text-xs">🔥${randomPick.cal}kcal · P:${randomPick.protein}g</div></button>`;
+    }
+    document.getElementById('dynamic-suggestions').innerHTML = suggestionsHtml;
+    lucide.createIcons();
+  }
+  function updateDashboard(){
+    const today=new Date().toISOString().split('T')[0];
+    let meals=allData.filter(d=>d.type==='meal'&&d.date===today);
+    let waters=allData.filter(d=>d.type==='water'&&d.date===today);
+    let consumed=meals.reduce((s,m)=>s+(m.calories||0),0);
+    let waterTotal=waters.reduce((s,w)=>s+(w.water_ml||0),0);
+    let protein=meals.reduce((s,m)=>s+(m.protein||0),0), carbs=meals.reduce((s,m)=>s+(m.carbs||0),0), fats=meals.reduce((s,m)=>s+(m.fats||0),0), fiber=meals.reduce((s,m)=>s+(m.fiber||0),0);
+    document.getElementById('dash-goal').innerText=calorieGoal; document.getElementById('dash-consumed').innerText=consumed; document.getElementById('dash-remaining').innerText=Math.max(0,calorieGoal-consumed); document.getElementById('dash-water').innerText=waterTotal;
+    let wpct=Math.min(100,Math.round(waterTotal/2500*100)); document.getElementById('water-progress').style.width=wpct+'%'; document.getElementById('water-pct').innerText=wpct;
+    document.getElementById('macro-protein').innerText=protein+'g'; document.getElementById('macro-carbs').innerText=carbs+'g'; document.getElementById('macro-fats').innerText=fats+'g'; document.getElementById('macro-fiber').innerText=fiber+'g';
+    ['protein','carbs','fats','fiber'].forEach(m=>{ let max={protein:120,carbs:250,fats:70,fiber:35}[m]; let val={protein,fats,carbs,fiber}[m]; let perc=Math.min(100,(val/max)*100); let bar=document.getElementById(`${m}-bar`); if(bar) bar.style.width=perc+'%'; });
+    let byType={breakfast:0,lunch:0,snack:0,dinner:0}; meals.forEach(m=>{if(byType[m.meal_type]!==undefined) byType[m.meal_type]+=m.calories||0;});
+    document.getElementById('tb-breakfast').innerText=byType.breakfast+' kcal'; document.getElementById('tb-lunch').innerText=byType.lunch+' kcal'; document.getElementById('tb-snack').innerText=byType.snack+' kcal'; document.getElementById('tb-dinner').innerText=byType.dinner+' kcal';
+    document.getElementById('tracker-total').innerText=consumed;
+    let recentDiv=document.getElementById('recent-meals'); if(meals.length===0) recentDiv.innerHTML='<p class="text-sm text-gray-400 italic">No meals logged yet ~ add some 💗</p>'; else recentDiv.innerHTML=meals.slice(-5).reverse().map(m=>`<div class="flex justify-between border-b py-2"><span class="font-medium">${m.food_name}</span><span class="text-[#f06292]">${m.calories} kcal</span></div>`).join('');
+    ['breakfast','lunch','snack','dinner'].forEach(t=>{ let container=document.getElementById(`plan-${t}`); let items=allData.filter(m=>m.type==='meal'&&m.date===today&&m.meal_type===t); container.innerHTML=items.map(m=>`<div class="bg-[#fef2f5] border border-[#ffd4df] px-2 py-1 text-sm flex justify-between"><span>${m.food_name}</span><span>${m.calories}cal</span></div>`).join('')||'<span class="text-xs text-gray-400">—</span>';});
+    updateWeeklyChart(); updateDynamicSuggestions();
+  }
+  function setGoal(type){ const goals={loss:1800,gain:2500}; calorieGoal=goals[type]; localStorage.setItem('nutrilife_goal',calorieGoal); document.getElementById('goal-confirmation').innerHTML=`<p>🎯 Goal set to ${calorieGoal} kcal/day 💖</p>`; document.getElementById('goal-confirmation').classList.remove('hidden'); updateDashboard(); showToast(`Goal updated to ${calorieGoal} kcal!`); }
+  document.getElementById('dash-date').innerText=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  loadFromStorage();
+  setInterval(()=>lucide.createIcons(),300);
+</script>
+</body>
+</html>
