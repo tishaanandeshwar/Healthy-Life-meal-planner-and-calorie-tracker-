@@ -61,6 +61,8 @@
     .nav-link:hover { background: #ffeff2; border-bottom-color: #f48fb1; }
     .kawaii-icon { filter: drop-shadow(1px 1px 0 #ffe0e7); }
     .heart-emoji { display: inline-block; font-size: 1.1rem; }
+    .diet-tab-active { background: #f48fb1; color: white; border-color: #f48fb1; }
+    .diet-tab-inactive { background: #fff0f3; color: #ad5a6e; border-color: #ffcdd9; }
   </style>
 </head>
 <body class="h-full bg-[#fff9f7] text-gray-700 overflow-auto font-kawaii">
@@ -144,6 +146,13 @@
     </div>
 
     <div id="page-planner" class="page hidden fade-in p-5 md:p-8 max-w-7xl mx-auto"><h1 class="text-3xl font-bold">🍱 Meal Planner <span class="text-[#e6739f]">♡</span></h1><p class="text-gray-500 mb-6">"Take the guesswork out of ghar ka khana with intelligent, goal-mapped meal tracking.!!"</p>
+      
+      <!-- VEG/NON-VEG TABS ADDED -->
+      <div class="flex flex-wrap gap-3 mb-6 border-b border-[#ffe0e8] pb-2">
+        <button id="veg-tab-btn" onclick="setDietFilter('veg')" class="px-6 py-2 font-bold transition-all diet-tab-active border-2">🌱 Veg</button>
+        <button id="nonveg-tab-btn" onclick="setDietFilter('nonveg')" class="px-6 py-2 font-bold transition-all diet-tab-inactive border-2">🍗 Non-Veg</button>
+      </div>
+
       <div class="grid md:grid-cols-4 gap-5 mb-8">
         <div class="bg-white border-2 border-[#ffdce8] p-5 shadow-square"><div class="flex gap-2 mb-3"><i data-lucide="sunrise"></i><h3 class="font-bold"> Breakfast</h3></div><div id="plan-breakfast" class="min-h-[80px] space-y-2"></div><button onclick="openPlanModal('breakfast')" class="w-full mt-2 py-2 border-2 border-dashed border-[#ffbfcf] text-sm">+ Add</button></div>
         <div class="bg-white border-2 border-[#ffdce8] p-5 shadow-square"><div class="flex gap-2 mb-3"><i data-lucide="sun"></i><h3 class="font-bold"> Lunch</h3></div><div id="plan-lunch" class="min-h-[80px] space-y-2"></div><button onclick="openPlanModal('lunch')" class="w-full mt-2 py-2 border-2 border-dashed border-[#ffbfcf] text-sm">+ Add</button></div>
@@ -185,12 +194,64 @@
 <script>
   let allData = []; let calorieGoal = 2000; let currentPlanType = '';
   let weeklyChart = null;
+  let currentDietFilter = 'veg'; // 'veg' or 'nonveg'
+  
+  // Expanded libraries with veg/non-veg tags
   const expandedSuggestionLibrary = {
-    breakfast: [ { name:'Ragi Dosa', cal:210, protein:7, carbs:38, fats:4, fiber:5 },{ name:'Moong Dal Chilla', cal:180, protein:9, carbs:28, fats:3, fiber:6 },{ name:'Besan Chilla', cal:195, protein:8, carbs:24, fats:7, fiber:4 },{ name:'Poha with peanuts', cal:260, protein:6, carbs:42, fats:9, fiber:5 },{ name:'Oats Idli', cal:170, protein:5, carbs:32, fats:2, fiber:6 } ],
-    lunch: [ { name:'Brown Rice + Sambar', cal:390, protein:14, carbs:68, fats:7, fiber:10 },{ name:'Quinoa Pulao', cal:350, protein:12, carbs:52, fats:9, fiber:7 },{ name:'Baingan Bharta with Roti', cal:430, protein:11, carbs:55, fats:18, fiber:12 },{ name:'Palak Tofu Curry', cal:340, protein:18, carbs:28, fats:16, fiber:6 } ],
-    snack: [ { name:'Roasted Chana', cal:160, protein:10, carbs:25, fats:3, fiber:8 },{ name:'Greek Yogurt Bowl', cal:120, protein:12, carbs:8, fats:4, fiber:1 },{ name:'Fruit Chaat', cal:90, protein:2, carbs:22, fats:0.5, fiber:3 },{ name:'Masala Peanuts', cal:210, protein:8, carbs:14, fats:14, fiber:4 } ],
-    dinner: [ { name:'Light Vegetable Khichdi', cal:290, protein:9, carbs:48, fats:6, fiber:6 },{ name:'Grilled Paneer Tikka', cal:290, protein:24, carbs:12, fats:16, fiber:3 },{ name:'Mushroom Matar', cal:320, protein:14, carbs:36, fats:12, fiber:9 },{ name:'Egg Curry (2 eggs)', cal:340, protein:22, carbs:16, fats:20, fiber:4 } ]
+    breakfast: [ 
+      { name:'Ragi Dosa', cal:210, protein:7, carbs:38, fats:4, fiber:5, diet:'veg' },
+      { name:'Moong Dal Chilla', cal:180, protein:9, carbs:28, fats:3, fiber:6, diet:'veg' },
+      { name:'Besan Chilla', cal:195, protein:8, carbs:24, fats:7, fiber:4, diet:'veg' },
+      { name:'Poha with peanuts', cal:260, protein:6, carbs:42, fats:9, fiber:5, diet:'veg' },
+      { name:'Oats Idli', cal:170, protein:5, carbs:32, fats:2, fiber:6, diet:'veg' },
+      { name:'Egg White Omelette', cal:140, protein:16, carbs:2, fats:6, fiber:0, diet:'nonveg' },
+      { name:'Chicken Sausage', cal:180, protein:12, carbs:3, fats:13, fiber:0, diet:'nonveg' }
+    ],
+    lunch: [ 
+      { name:'Brown Rice + Sambar', cal:390, protein:14, carbs:68, fats:7, fiber:10, diet:'veg' },
+      { name:'Quinoa Pulao', cal:350, protein:12, carbs:52, fats:9, fiber:7, diet:'veg' },
+      { name:'Baingan Bharta with Roti', cal:430, protein:11, carbs:55, fats:18, fiber:12, diet:'veg' },
+      { name:'Palak Tofu Curry', cal:340, protein:18, carbs:28, fats:16, fiber:6, diet:'veg' },
+      { name:'Chicken Curry with Rice', cal:550, protein:35, carbs:48, fats:20, fiber:3, diet:'nonveg' },
+      { name:'Fish Curry (Rohu)', cal:480, protein:32, carbs:22, fats:25, fiber:2, diet:'nonveg' },
+      { name:'Egg Curry (2 eggs)', cal:380, protein:24, carbs:18, fats:22, fiber:3, diet:'nonveg' }
+    ],
+    snack: [ 
+      { name:'Roasted Chana', cal:160, protein:10, carbs:25, fats:3, fiber:8, diet:'veg' },
+      { name:'Greek Yogurt Bowl', cal:120, protein:12, carbs:8, fats:4, fiber:1, diet:'veg' },
+      { name:'Fruit Chaat', cal:90, protein:2, carbs:22, fats:0.5, fiber:3, diet:'veg' },
+      { name:'Masala Peanuts', cal:210, protein:8, carbs:14, fats:14, fiber:4, diet:'veg' },
+      { name:'Boiled Egg', cal:78, protein:6, carbs:1, fats:5, fiber:0, diet:'nonveg' },
+      { name:'Chicken Seekh Roll', cal:250, protein:18, carbs:14, fats:14, fiber:1, diet:'nonveg' }
+    ],
+    dinner: [ 
+      { name:'Light Vegetable Khichdi', cal:290, protein:9, carbs:48, fats:6, fiber:6, diet:'veg' },
+      { name:'Grilled Paneer Tikka', cal:290, protein:24, carbs:12, fats:16, fiber:3, diet:'veg' },
+      { name:'Mushroom Matar', cal:320, protein:14, carbs:36, fats:12, fiber:9, diet:'veg' },
+      { name:'Egg Curry (2 eggs)', cal:340, protein:22, carbs:16, fats:20, fiber:4, diet:'nonveg' },
+      { name:'Butter Chicken (small)', cal:480, protein:30, carbs:15, fats:32, fiber:2, diet:'nonveg' },
+      { name:'Tandoori Chicken', cal:380, protein:42, carbs:6, fats:18, fiber:0, diet:'nonveg' }
+    ]
   };
+
+  function setDietFilter(type) {
+    currentDietFilter = type;
+    const vegBtn = document.getElementById('veg-tab-btn');
+    const nonVegBtn = document.getElementById('nonveg-tab-btn');
+    if(type === 'veg') {
+      vegBtn.classList.add('diet-tab-active');
+      vegBtn.classList.remove('diet-tab-inactive');
+      nonVegBtn.classList.add('diet-tab-inactive');
+      nonVegBtn.classList.remove('diet-tab-active');
+    } else {
+      nonVegBtn.classList.add('diet-tab-active');
+      nonVegBtn.classList.remove('diet-tab-inactive');
+      vegBtn.classList.add('diet-tab-inactive');
+      vegBtn.classList.remove('diet-tab-active');
+    }
+    updateDynamicSuggestions();
+  }
+
   function loadFromStorage() { const stored = localStorage.getItem('nutrilife_data'); if(stored) allData = JSON.parse(stored); const storedGoal = localStorage.getItem('nutrilife_goal'); if(storedGoal) calorieGoal = parseInt(storedGoal); updateDashboard(); updateDynamicSuggestions(); }
   function saveToStorage() { localStorage.setItem('nutrilife_data', JSON.stringify(allData)); localStorage.setItem('nutrilife_goal', calorieGoal); }
   async function addEntry(entry) { entry.id = Date.now(); allData.push(entry); saveToStorage(); updateDashboard(); updateDynamicSuggestions(); }
@@ -202,8 +263,8 @@
   async function addWater(ml){ await addEntry({type:'water',date:new Date().toISOString().split('T')[0],water_ml:ml}); showToast(`💧 +${ml}ml water`); }
   function calcBMI(){ let w=parseFloat(document.getElementById('bmi-weight').value), h=parseFloat(document.getElementById('bmi-height').value); if(w&&h){ let bmi=(w/((h/100)**2)).toFixed(1); let cat=bmi<18.5?'Underweight':bmi<25?'Normal':bmi<30?'Overweight':'Obese'; document.getElementById('bmi-result').innerText=`BMI: ${bmi} (${cat})`; } }
   const foodDB = [
-    {name:'Idli (2 pcs)',cal:190,protein:6,carbs:36,fats:1.6,fiber:1},{name:'Dosa with chutney',cal:320,protein:8,carbs:48,fats:10,fiber:2},{name:'Paneer Butter Masala',cal:480,protein:22,carbs:18,fats:32,fiber:2},{name:'Chana Masala',cal:310,protein:11,carbs:45,fats:8,fiber:12},{name:'Rajma Chawal',cal:350,protein:12,carbs:62,fats:4,fiber:8},{name:'Biryani (Chicken)',cal:520,protein:28,carbs:65,fats:18,fiber:2},{name:'Tandoori Chicken',cal:380,protein:42,carbs:6,fats:18,fiber:0},{name:'Palak Paneer',cal:380,protein:18,carbs:16,fats:28,fiber:4},{name:'Aloo Paratha',cal:320,protein:8,carbs:42,fats:14,fiber:3},{name:'Poha',cal:280,protein:6,carbs:45,fats:8,fiber:5},{name:'Egg Bhurji',cal:220,protein:14,carbs:6,fats:14,fiber:1},{name:'Mushroom Masala',cal:260,protein:9,carbs:18,fats:15,fiber:5}];
-  function searchFood(){ const q=document.getElementById('food-search').value.toLowerCase(); if(!q){ document.getElementById('food-results').innerHTML=''; return; } const matches=foodDB.filter(f=>f.name.toLowerCase().includes(q)); document.getElementById('food-results').innerHTML=matches.map(f=>`<button onclick='selectFood(${JSON.stringify(f).replace(/'/g, "&#39;")})' class="w-full flex justify-between p-3 bg-white border border-[#ffdee8] hover:bg-[#fff3f5] text-left"><div><p class="font-medium">${f.name}</p><p class="text-xs">🔥${f.cal}kcal · P:${f.protein}g</p></div><i data-lucide="chevron-right"></i></button>`).join(''); lucide.createIcons(); }
+    {name:'Idli (2 pcs)',cal:190,protein:6,carbs:36,fats:1.6,fiber:1,diet:'veg'},{name:'Dosa with chutney',cal:320,protein:8,carbs:48,fats:10,fiber:2,diet:'veg'},{name:'Paneer Butter Masala',cal:480,protein:22,carbs:18,fats:32,fiber:2,diet:'veg'},{name:'Chana Masala',cal:310,protein:11,carbs:45,fats:8,fiber:12,diet:'veg'},{name:'Rajma Chawal',cal:350,protein:12,carbs:62,fats:4,fiber:8,diet:'veg'},{name:'Biryani (Chicken)',cal:520,protein:28,carbs:65,fats:18,fiber:2,diet:'nonveg'},{name:'Tandoori Chicken',cal:380,protein:42,carbs:6,fats:18,fiber:0,diet:'nonveg'},{name:'Palak Paneer',cal:380,protein:18,carbs:16,fats:28,fiber:4,diet:'veg'},{name:'Aloo Paratha',cal:320,protein:8,carbs:42,fats:14,fiber:3,diet:'veg'},{name:'Poha',cal:280,protein:6,carbs:45,fats:8,fiber:5,diet:'veg'},{name:'Egg Bhurji',cal:220,protein:14,carbs:6,fats:14,fiber:1,diet:'nonveg'},{name:'Mushroom Masala',cal:260,protein:9,carbs:18,fats:15,fiber:5,diet:'veg'}];
+  function searchFood(){ const q=document.getElementById('food-search').value.toLowerCase(); if(!q){ document.getElementById('food-results').innerHTML=''; return; } const matches=foodDB.filter(f=>f.name.toLowerCase().includes(q) && f.diet === currentDietFilter); document.getElementById('food-results').innerHTML=matches.map(f=>`<button onclick='selectFood(${JSON.stringify(f).replace(/'/g, "&#39;")})' class="w-full flex justify-between p-3 bg-white border border-[#ffdee8] hover:bg-[#fff3f5] text-left"><div><p class="font-medium">${f.name}</p><p class="text-xs">🔥${f.cal}kcal · P:${f.protein}g</p></div><i data-lucide="chevron-right"></i></button>`).join(''); lucide.createIcons(); }
   function selectFood(food) { document.getElementById('selected-food-card').classList.remove('hidden'); document.getElementById('selected-food-name').innerText=food.name; document.getElementById('selected-cal').innerText=food.cal; document.getElementById('selected-protein').innerText=food.protein; document.getElementById('smart-food-name').value=food.name; document.getElementById('smart-base-cal').value=food.cal; document.getElementById('smart-base-protein').value=food.protein||0; document.getElementById('smart-base-carbs').value=food.carbs||0; document.getElementById('smart-base-fats').value=food.fats||0; document.getElementById('smart-base-fiber').value=food.fiber||0; document.getElementById('food-search').value=''; document.getElementById('food-results').innerHTML=''; }
   async function logSelectedFood(e){ e.preventDefault(); const qty=parseFloat(document.getElementById('smart-quantity').value)||1; const name=document.getElementById('smart-food-name').value; const cal=parseFloat(document.getElementById('smart-base-cal').value); if(!name||isNaN(cal)){ showToast('Please select a food first ♡'); return; } await addEntry({type:'meal',date:new Date().toISOString().split('T')[0],food_name:`${name}${qty>1?' ('+qty+'x)':''}`,calories:Math.round(cal*qty),protein:Math.round((parseFloat(document.getElementById('smart-base-protein').value||0)*qty)*10)/10,carbs:Math.round((parseFloat(document.getElementById('smart-base-carbs').value||0)*qty)*10)/10,fats:Math.round((parseFloat(document.getElementById('smart-base-fats').value||0)*qty)*10)/10,fiber:Math.round((parseFloat(document.getElementById('smart-base-fiber').value||0)*qty)*10)/10,meal_type:document.getElementById('smart-meal-type').value}); showToast(`✅ ${name} logged!`); document.getElementById('selected-food-card').classList.add('hidden'); }
   async function quickAdd(name,cal,protein,carbs,fats,fiber,mealType){ await addEntry({type:'meal',date:new Date().toISOString().split('T')[0],food_name:name,calories:cal,protein,carbs,fats,fiber,meal_type:mealType}); showToast(`➕ ${name} added~`); }
@@ -223,8 +284,12 @@
     for (let slot of ['breakfast','lunch','snack','dinner']) {
       const lib = expandedSuggestionLibrary[slot];
       if(!lib) continue;
-      const randomPick = lib[Math.floor(Math.random() * lib.length)];
-      suggestionsHtml += `<button onclick="quickAdd('${randomPick.name}',${randomPick.cal},${randomPick.protein},${randomPick.carbs},${randomPick.fats},${randomPick.fiber},'${slot}')" class="suggestion-tag text-left shadow-sm"><div class="font-semibold text-sm">${randomPick.name}</div><div class="text-xs">🔥${randomPick.cal}kcal · P:${randomPick.protein}g</div></button>`;
+      const filteredByDiet = lib.filter(item => item.diet === currentDietFilter);
+      let randomPick = filteredByDiet.length ? filteredByDiet[Math.floor(Math.random() * filteredByDiet.length)] : lib[0];
+      if(!randomPick && lib.length) randomPick = lib[0];
+      if(randomPick) {
+        suggestionsHtml += `<button onclick="quickAdd('${randomPick.name}',${randomPick.cal},${randomPick.protein},${randomPick.carbs},${randomPick.fats},${randomPick.fiber},'${slot}')" class="suggestion-tag text-left shadow-sm"><div class="font-semibold text-sm">${randomPick.name}</div><div class="text-xs">🔥${randomPick.cal}kcal · P:${randomPick.protein}g</div></button>`;
+      }
     }
     document.getElementById('dynamic-suggestions').innerHTML = suggestionsHtml;
     lucide.createIcons();
@@ -251,6 +316,7 @@
   document.getElementById('dash-date').innerText=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   loadFromStorage();
   setInterval(()=>lucide.createIcons(),300);
+  document.getElementById('food-search').addEventListener('input', searchFood);
 </script>
 </body>
 </html>
